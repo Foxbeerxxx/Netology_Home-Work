@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    container_name: tatarincevaaprometheus
+    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml
+    ports:
+     - 9090:9090
+    volumes:
+     - ./prometheus:/etc/prometheus
+     - prometheus-data:/prometheus
+    networks:
+     - monitoring-stack
+    restart: always
+
+  pushgateway:
+    image: prom/pushgateway:v1.6.2
+    container_name: tatarincevaapushgateway
+    ports:
+     - 9091:9091
+    networks:
+     - monitoring-stack
+    depends_on:
+     - prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:8.5.2
+    container_name: tatarincevaa-netology-grafana
+    ports:
+      - 80:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - grafana-config:/etc/grafana
+      - ./grafana/custom.ini:/etc/grafana/custom.ini
+    environment:
+      - GF_PATHS_CONFIG=/etc/grafana/custom.ini
+    networks:
+     - monitoring-stack
+    depends_on:
+     - prometheus
+    restart: always
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  grafana-config:
+
+networks:
+  monitoring-stack:
+    name: TatarincevAlexeyAlexeevich-my-netology-hw
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
